@@ -184,6 +184,7 @@ CREATE TABLE users (
 ```
 
 Индексы:
+
 - `idx_users_email` - уникальный индекс по email
 - `idx_users_role` - индекс по роли
 
@@ -210,6 +211,7 @@ CREATE TABLE projects (
 ```
 
 Индексы:
+
 - `idx_projects_owner` - индекс по владельцу
 - `idx_projects_status` - индекс по статусу
 - `idx_projects_phase` - индекс по фазе
@@ -227,6 +229,7 @@ CREATE TABLE project_business_goals (
 ```
 
 Индексы:
+
 - `idx_pbg_project_id` - индекс по project_id
 
 ### 4. Участники проекта (project_team_members)
@@ -242,6 +245,7 @@ CREATE TABLE project_team_members (
 ```
 
 Индексы:
+
 - `idx_ptm_project_id` - индекс по project_id
 - `idx_ptm_user_id` - индекс по user_id
 
@@ -262,6 +266,7 @@ CREATE TABLE technologies (
 ```
 
 Индексы:
+
 - `idx_tech_category` - индекс по категории
 - `idx_tech_lifecycle` - индекс по стадии жизненного цикла
 - `idx_tech_architect` - индекс по архитектору
@@ -279,6 +284,7 @@ CREATE TABLE project_technologies (
 ```
 
 Индексы:
+
 - `idx_pt_project_id` - индекс по project_id
 - `idx_pt_technology_id` - индекс по technology_id
 
@@ -301,6 +307,7 @@ CREATE TABLE tasks (
 ```
 
 Индексы:
+
 - `idx_tasks_assignee` - индекс по исполнителю
 - `idx_tasks_project` - индекс по проекту
 - `idx_tasks_status` - индекс по статусу
@@ -320,6 +327,7 @@ CREATE TABLE task_dependencies (
 ```
 
 Индексы:
+
 - `idx_td_task_id` - индекс по task_id
 - `idx_td_dependency_id` - индекс по dependency_id
 
@@ -344,6 +352,7 @@ CREATE TABLE risks (
 ```
 
 Индексы:
+
 - `idx_risks_owner` - индекс по владельцу
 - `idx_risks_linked` - составной индекс по linked_type и linked_id
 - `idx_risks_severity` - индекс по уровню серьезности
@@ -368,6 +377,7 @@ CREATE TABLE kpis (
 ```
 
 Индексы:
+
 - `idx_kpis_entity` - составной индекс по entity_type и entity_id
 - `idx_kpis_timestamp` - индекс по времени
 
@@ -386,6 +396,7 @@ CREATE TABLE audit_logs (
 ```
 
 Индексы:
+
 - `idx_audit_user` - индекс по пользователю
 - `idx_audit_entity` - составной индекс по entity_type и entity_id
 - `idx_audit_timestamp` - индекс по времени
@@ -403,6 +414,7 @@ CREATE TABLE roles (
 ```
 
 Индексы:
+
 - `idx_roles_name` - уникальный индекс по имени
 
 ### 13. Роли пользователей (user_roles)
@@ -418,26 +430,32 @@ CREATE TABLE user_roles (
 ```
 
 Индексы:
+
 - `idx_ur_user_id` - индекс по user_id
 - `idx_ur_role_id` - индекс по role_id
 
 ## Триггеры и ограничения
 
 ### Обновление времени изменения
+
 Для всех таблиц с полем `updated_at` создается триггер, автоматически обновляющий это поле при изменении записи.
 
 ### Проверка целостности данных
+
 - Все внешние ключи имеют ограничения ON DELETE CASCADE или SET NULL
 - Проверки значений через CHECK constraints
 - Уникальные ограничения для предотвращения дубликатов
 
 ### Индексы для оптимизации
+
 - Составные индексы для часто используемых запросов
 - Частичные индексы для фильтрации по статусам
 - GiST индексы для полнотекстового поиска (если требуется)
 
 ## Миграции
+
 Все изменения схемы базы данных осуществляются через миграции Prisma, которые обеспечивают:
+
 - Версионирование схемы
 - Откат изменений
 - Автоматическую генерацию SQL скриптов

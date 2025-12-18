@@ -32,6 +32,7 @@ projects/
 ### Сущности
 
 #### Project (Проект)
+
 Основная сущность модуля, представляющая проект в системе.
 
 ```typescript
@@ -61,6 +62,7 @@ interface Project {
 ```
 
 #### ProjectStatusHistory (История статусов проекта)
+
 Отслеживает изменения статуса проекта во времени.
 
 ```typescript
@@ -77,9 +79,11 @@ interface ProjectStatusHistory {
 ## Прикладные сервисы
 
 ### ProjectService
+
 Основной сервис для управления проектами.
 
-#### Методы:
+#### Методы
+
 - `createProject(dto: CreateProjectDTO): Promise<Project>` - Создание нового проекта
 - `updateProject(id: string, dto: UpdateProjectDTO): Promise<Project>` - Обновление проекта
 - `getProject(id: string): Promise<Project>` - Получение проекта по ID
@@ -90,18 +94,22 @@ interface ProjectStatusHistory {
 - `getProjectTeam(id: string): Promise<User[]>` - Получение команды проекта
 
 ### ProjectBudgetService
+
 Сервис для управления бюджетом проекта.
 
-#### Методы:
+#### Методы
+
 - `updateBudget(projectId: string, budget: number): Promise<Project>` - Обновление бюджета
 - `recordExpense(projectId: string, amount: number, description: string): Promise<void>` - Запись расхода
 - `getBudgetReport(projectId: string): Promise<BudgetReport>` - Получение отчета по бюджету
 - `checkBudgetThreshold(project: Project): Promise<void>` - Проверка порога бюджета
 
 ### ProjectKpiService
+
 Сервис для управления KPI проекта.
 
-#### Методы:
+#### Методы
+
 - `createKpi(projectId: string, dto: CreateKpiDTO): Promise<KPI>` - Создание KPI
 - `updateKpi(kpiId: string, dto: UpdateKpiDTO): Promise<KPI>` - Обновление KPI
 - `getProjectKpis(projectId: string): Promise<KPI[]>` - Получение KPI проекта
@@ -110,6 +118,7 @@ interface ProjectStatusHistory {
 ## Use-case'ы
 
 ### Создание проекта
+
 1. Валидация входных данных
 2. Создание новой сущности проекта
 3. Назначение владельца проекта
@@ -118,6 +127,7 @@ interface ProjectStatusHistory {
 6. Логирование события создания
 
 ### Обновление статуса проекта
+
 1. Проверка прав доступа пользователя
 2. Валидация нового статуса
 3. Обновление статуса и фазы проекта
@@ -126,6 +136,7 @@ interface ProjectStatusHistory {
 6. Отправка уведомлений при изменении статуса
 
 ### Расчет прогноза
+
 1. Получение текущих расходов проекта
 2. Анализ выполненных задач
 3. Прогнозирование оставшихся работ
@@ -133,6 +144,7 @@ interface ProjectStatusHistory {
 5. Обновление поля forecast в проекте
 
 ### Управление командой проекта
+
 1. Добавление участников в команду
 2. Удаление участников из команды
 3. Изменение роли участника
@@ -143,7 +155,8 @@ interface ProjectStatusHistory {
 
 ### REST API
 
-#### Основные endpoints:
+#### Основные endpoints
+
 - `POST /api/v1/projects` - Создание проекта
 - `GET /api/v1/projects` - Получение списка проектов
 - `GET /api/v1/projects/{id}` - Получение проекта
@@ -153,7 +166,7 @@ interface ProjectStatusHistory {
 - `POST /api/v1/projects/{id}/team` - Добавление участника в команду
 - `DELETE /api/v1/projects/{id}/team/{userId}` - Удаление участника из команды
 
-#### DTO:
+#### DTO
 
 ```typescript
 // DTO для создания проекта
@@ -191,7 +204,7 @@ interface UpdateProjectStatusDTO {
 
 ### GraphQL
 
-#### Типы:
+#### Типы
 
 ```graphql
 type Project {
@@ -245,7 +258,7 @@ type BudgetReport {
 }
 ```
 
-#### Запросы:
+#### Запросы
 
 ```graphql
 type Query {
@@ -266,11 +279,13 @@ type Mutation {
 ## Интеграции
 
 ### Входящие интеграции
+
 - Jira/YouTrack webhook для синхронизации задач
 - CSV/Excel импорт для массового создания проектов
 - ERP системы для получения данных о бюджете
 
 ### Исходящие интеграции
+
 - Уведомления в Slack/MS Teams при изменении статуса
 - Email уведомления о превышении бюджета
 - Вебхуки для внешних систем отчетности
@@ -278,16 +293,19 @@ type Mutation {
 ## Бизнес-правила
 
 ### Правила статусов
+
 - Проект может быть переведен в статус "completed" только если все задачи завершены
 - Проект в статусе "completed" или "cancelled" не может быть изменен
 - При переходе в статус "active" проверяется наличие команды
 
 ### Бюджетные правила
+
 - Бюджет может быть изменен только в статусе "draft" или "planning"
 - При превышении 80% бюджета отправляется уведомление
 - Прогноз автоматически пересчитывается при изменении расходов
 
 ### Правила команды
+
 - Владелец проекта всегда является членом команды
 - Удалить владельца из команды нельзя
 - Минимальный размер команды - 1 человек (владелец)
@@ -295,6 +313,7 @@ type Mutation {
 ## Отчетность
 
 ### Стандартные отчеты
+
 - Статус проекта (текущий статус, фаза, сроки)
 - Бюджетный отчет (бюджет, расходы, прогноз)
 - Командный отчет (участники, роли)
@@ -302,6 +321,7 @@ type Mutation {
 - Рисковой отчет (идентифицированные риски)
 
 ### Экспорт отчетов
+
 - CSV для импорта в Excel
 - PDF для печати и архивирования
 - JSON для интеграции с другими системами
@@ -309,6 +329,7 @@ type Mutation {
 ## Аудит и логирование
 
 ### События аудита
+
 - Создание проекта
 - Изменение основных параметров проекта
 - Изменение статуса проекта
@@ -317,6 +338,7 @@ type Mutation {
 - Создание/обновление KPI
 
 ### Логирование
+
 - Все изменения проекта логируются с указанием пользователя
 - Логи доступны через API аудита
 - Логи экспортируются для архивирования
