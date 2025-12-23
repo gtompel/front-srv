@@ -58,17 +58,56 @@
 ### Структура проекта
 
 ```txt
-src/
-├── projects/          - Модуль управления проектами
-├── technologies/     - Модуль управления технологиями
-├── tasks/             - Модуль управления задачами
-├── risks/             - Модуль управления рисками
-├── kpis/              - Модуль KPI и отчетности
-├── auth/              - Модуль аутентификации и авторизации
-├── shared/           - Общие компоненты и утилиты
-├── config/           - Конфигурационные файлы
-├── database/          - Схемы и миграции базы данных
-└── main.ts            - Точка входа приложения
+├── app/                     # App Router (обязательно)
+│   ├── (auth)/              # Auth layout (авторизованные маршруты)
+│   │   ├── layout.tsx       # Защищённый layout с проверкой сессии
+│   │   ├── dashboard/       # Главная страница портфеля
+│   │   ├── projects/        # CRUD проектов
+│   │   ├── technologies/    # Каталог технологий
+│   │   └── ...              # Другие защищённые страницы
+│   ├── api/                 # Next.js route handlers (вместо pages/api)
+│   │   ├── projects/        # POST /api/projects, GET /api/project/[id] и т.д.
+│   │   ├── technologies/
+│   │   └── auth/            # /api/auth/callback, /api/auth/session
+│   ├── auth/                # Страницы аутентификации
+│   │   ├── login/           # Страница входа
+│   │   └── error/           # Обработка ошибок аутентификации
+│   ├── layout.tsx           # Корневой layout (шапка, футер)
+│   └── page.tsx             # Главная страница (лендинг для неавторизованных)
+│
+├── lib/                     # Ядро приложения (вместо "main.ts")
+│   ├── auth/                # Аутентификация (NextAuth, адаптеры, провайдеры)
+│   ├── database/            # Prisma-клиент, миграции, схемы
+│   └── services/            # Сервисные слои (бизнес-логика по модулям)
+│       ├── projects/        # ProjectService (создание, обновление, валидация)
+│       ├── technologies/    # TechnologyService
+│       ├── tasks/           # TaskService
+│       └── ...              # Остальные сервисы
+│
+├── components/              # Переиспользуемые UI-компоненты
+│   ├── ui/                  # Компоненты из shadcn/ui или Radix
+│   ├── layout/              # Header, Sidebar, Footer
+│   ├── projects/            # ProjectCard, ProjectForm
+│   └── technologies/        # TechBadge, TechList
+│
+├── hooks/                   # Кастомные React-хуки
+│   ├── useProjects.ts       # Логика работы с проектами
+│   └── useAuth.ts           # Получение сессии, редиректы
+│
+├── types/                   # Типы TypeScript
+│   ├── index.ts             # Общие типы
+│   └── prisma.d.ts          # Расширение Prisma-клиентов
+│
+├── config/                  # Конфигурация
+│   ├── site.ts              # Метаданные, URL-адреса
+│   └── auth.ts              # Настройки NextAuth
+│
+├── public/                  # Статические файлы (иконки, манифест)
+│   ├── icons/               # Иконки для PWA
+│   └── manifest.json        # Web App Manifest
+│
+├── .env.local               # Переменные окружения
+└── next.config.mjs          # Конфиг Next.js
 ```
 
 ### Технический стек
@@ -114,7 +153,7 @@ src/
 Система следует современным практикам безопасности:
 
 - JWT токены с RS256 подписью
-- RBAC система ролей (admin, portfolio_manager, project_manager, viewer)
+- RBAC система ролей (admin, soft_manager, project_manager, viewer)
 - Аудит всех действий пользователей
 - Rate limiting для предотвращения злоупотреблений
 - Защита от CSRF и SQL injection

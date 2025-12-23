@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* 1. Определяем цвета через CSS-переменные (необязательно, но для ясности) */
+:root {
+    --background: oklch(1 0 0); /* #ffffff */
+    --foreground: oklch(0.205 0.014 285.82); /* #1f2937 */
+    --card: oklch(0.961 0.006 247.858); /* #f1f5f9 */
+    --popover: oklch(1 0 0); /* #ffffff */
+    --primary: oklch(0.205 0.014 285.82); /* #1f2937 */
+    --primary-foreground: oklch(1 0 0); /* #ffffff */
+    --secondary: oklch(0.627 0.165 293.4); /* #8b5cf6 */
+    --secondary-foreground: oklch(1 0 0); /* #ffffff */
+    --muted: oklch(0.961 0.006 247.858); /* #f1f5f9 */
+    --muted-foreground: oklch(0.556 0.014 285.82); /* #6b7280 */
+    --accent: oklch(0.627 0.165 293.4); /* #8b5cf6 */
+    --accent-foreground: oklch(1 0 0); /* #ffffff */
+    --destructive: oklch(0.577 0.245 27.325); /* #be123c */
+    --destructive-foreground: oklch(1 0 0); /* #ffffff */
+    --border: oklch(0.851 0.006 247.858); /* #d1d5db */
+    --input: oklch(0.961 0.006 247.858); /* #f1f5f9 */
+    --ring: oklch(0.627 0.165 293.4 / 0.5); /* rgba(139, 92, 246, 0.5) */
+    --chart-1: oklch(0.486 0.198 264.376); /* #4f46e5 */
+    --chart-2: oklch(0.627 0.165 293.4); /* #a855f7 */
+    --chart-3: oklch(0.627 0.165 340.4); /* #ec4899 */
+    --chart-4: oklch(0.696 0.17 162.48); /* #f59e0b */
+    --chart-5: oklch(0.769 0.188 70.08); /* #10b981 */
+    --radius: 0.5rem;
+    --sidebar: oklch(0.961 0.006 247.858); /* #f1f5f9 */
+    --sidebar-foreground: oklch(0.205 0.014 285.82); /* #1f2937 */
+    --sidebar-primary: oklch(1 0 0); /* #ffffff */
+    --sidebar-primary-foreground: oklch(0.205 0.014 285.82); /* #1f2937 */
+    --sidebar-accent: oklch(0.627 0.165 293.4); /* #8b5cf6 */
+    --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff */
+    --sidebar-border: oklch(0.851 0.006 247.858); /* #d1d5db */
+    --sidebar-ring: oklch(0.627 0.165 293.4 / 0.5);
+}
+
+/* 2. Определяем тему через @theme */
+@theme {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-muted: var(--muted);
+    --color-border: var(--border);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-border: var(--sidebar-border);
+
+    --radius: var(--radius);
+}
+
+/* 3. Глобальные стили — БЕЗ @layer и БЕЗ @apply внутри @theme */
+* {
+    border-color: var(--color-border);
+    outline-color: color-mix(in oklch, var(--color-ring), transparent 50%);
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+}
+
+/* 4. Sidebar responsiveness */
+@media (max-width: 768px) {
+    body[data-sidebar-collapsed] main {
+        margin-left: 64px !important;
+        padding-left: 0 !important;
+    }
+}
+
+@keyframes blink {
+    0%,
+    50% {
+        opacity: 1;
+    }
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+.animate-blink {
+    animation: blink 1s steps(1, end) infinite;
+}
