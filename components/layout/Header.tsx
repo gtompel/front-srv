@@ -41,7 +41,7 @@ export default function Header() {
     <header className="h-16 bg-muted border-b border-gray-400 flex items-center justify-between px-6 relative">
       {/* Логотип */}
       <Link href="/" className="text-shadow-md font-bold text-gray-900">
-        Проекты <span className="text-red-500">&</span> Технологии
+        Проекты <span className="text-red-400">&</span> Технологии
       </Link>
 
       {/* Правая часть */}
