@@ -14,7 +14,7 @@ export default function LoginPage() {
   // Редирект если уже авторизован
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/technologies");
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
 

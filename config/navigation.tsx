@@ -21,7 +21,7 @@ export interface NavigationItem {
 }
 
 export const navigation: NavigationItem[] = [
-  { name: "Панель управления", href: "/", icon: BarChart3 },
+  { name: "Панель управления", href: "/dashboard", icon: BarChart3 },
   { name: "Технологии", href: "/technologies", icon: Code },
   { name: "Проекты", href: "/projects", icon: Building },
   { name: "Задачи", href: "/tasks", icon: CheckSquare },

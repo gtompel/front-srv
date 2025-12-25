@@ -60,8 +60,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       if (onSuccess) {
         onSuccess();
       } else {
-        // Редирект на защищённую страницу
-        router.push("/technologies");
+        // Редирект на панель управления
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {

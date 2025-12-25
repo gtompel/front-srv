@@ -103,8 +103,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       if (onSuccess) {
         onSuccess();
       } else {
-        // Редирект на защищённую страницу
-        router.push("/technologies");
+        // Редирект на панель управления
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {

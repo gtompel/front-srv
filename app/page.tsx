@@ -11,10 +11,10 @@ export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // Редирект авторизованных пользователей на дашборд (первый защищённый маршрут)
+  // Редирект авторизованных пользователей на дашборд
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/technologies");
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
 

@@ -8,6 +8,7 @@ import {
   clearTokens,
   getAccessToken,
   isTokenExpired,
+  shouldRefreshToken,
   getUserFromToken,
   decodeJWT,
 } from "./token";
@@ -114,23 +115,17 @@ export async function refreshAccessToken(): Promise<string | null> {
 
 /**
  * Получение текущей сессии
+ * Использует проактивное обновление токена
  */
 export async function getSession(): Promise<AuthSession | null> {
-  const token = getAccessToken();
+  // Используем ensureValidToken для проактивного обновления
+  const token = await ensureValidToken();
   
-  // Если токена нет вообще, не пытаемся обновлять
   if (!token) {
     return null;
   }
-  
-  // Если токен истёк, пытаемся обновить
-  if (isTokenExpired(token)) {
-    const newToken = await refreshAccessToken();
-    if (!newToken) return null;
-    return getSessionFromToken(newToken);
-  }
 
-  // Токен валиден, создаём сессию
+  // Создаём сессию из валидного токена
   return getSessionFromToken(token);
 }
 
@@ -152,6 +147,127 @@ function getSessionFromToken(token: string): AuthSession | null {
   };
 }
 
+// Флаг для предотвращения одновременных запросов на обновление токена
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+/**
+ * Проактивно обновляет токен, если он скоро истечёт
+ * Использует кэширование, чтобы избежать множественных одновременных запросов
+ */
+async function ensureValidToken(): Promise<string | null> {
+  const token = getAccessToken();
+  
+  if (!token) {
+    return null;
+  }
+
+  // Если токен истёк, обязательно обновляем
+  if (isTokenExpired(token)) {
+    // Если уже обновляем токен, ждём завершения
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise;
+    }
+    
+    isRefreshing = true;
+    refreshPromise = refreshAccessToken();
+    
+    try {
+      const newToken = await refreshPromise;
+      isRefreshing = false;
+      refreshPromise = null;
+      return newToken;
+    } catch (error) {
+      isRefreshing = false;
+      refreshPromise = null;
+      return null;
+    }
+  }
+
+  // Если токен скоро истечёт (менее 2 минут), обновляем заранее
+  if (shouldRefreshToken(token)) {
+    // Если уже обновляем токен, ждём завершения
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise;
+    }
+    
+    // Обновляем в фоне, не блокируя текущий запрос
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = refreshAccessToken();
+      
+      refreshPromise
+        .then(() => {
+          isRefreshing = false;
+          refreshPromise = null;
+        })
+        .catch(() => {
+          isRefreshing = false;
+          refreshPromise = null;
+        });
+    }
+    
+    // Возвращаем текущий токен, пока обновление идёт в фоне
+    return token;
+  }
+
+  // Токен валиден и не требует обновления
+  return token;
+}
+
+/**
+ * Выполняет авторизованный запрос с автоматическим обновлением токена
+ * Обновляет токен проактивно (за 2 минуты до истечения) или при 401
+ */
+async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  // Получаем валидный токен (обновляем при необходимости)
+  let token = await ensureValidToken();
+  
+  if (!token) {
+    clearTokens();
+    throw new AuthenticationError("Токен не найден или недействителен");
+  }
+
+  // Выполняем запрос
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Если получили 401, пытаемся обновить токен и повторить запрос
+  if (response.status === 401) {
+    // Сбрасываем флаг, чтобы можно было обновить токен
+    isRefreshing = false;
+    refreshPromise = null;
+    
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      // Если не удалось обновить, очищаем токены и выбрасываем ошибку
+      clearTokens();
+      throw new AuthenticationError("Сессия истекла. Пожалуйста, войдите снова.");
+    }
+    
+    // Повторяем запрос с новым токеном
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${newToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  return response;
+}
+
 /**
  * Получение уведомлений пользователя
  */
@@ -164,17 +280,8 @@ export async function getNotifications(): Promise<
     read: boolean;
   }>
 > {
-  const token = getAccessToken();
-  
-  if (!token) return [];
-
   try {
-    const response = await fetch(`${API_BASE_URL}/notifications`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await authenticatedFetch(`${API_BASE_URL}/notifications`);
 
     // 404 - это нормально, если endpoint еще не реализован
     if (response.status === 404) {
@@ -189,6 +296,11 @@ export async function getNotifications(): Promise<
     const data = await response.json();
     return data.notifications || [];
   } catch (error) {
+    // Если это ошибка аутентификации, пробрасываем её дальше
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    
     // Для уведомлений не критично, если запрос не удался
     // Просто возвращаем пустой массив
     // Не логируем 404 как ошибку

@@ -7,7 +7,7 @@ export const siteConfig = {
   name: "Проекты & Технологии",
   description: "Cервис учёта проектов и технологий",
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-  version: "0.1.0",
+  version: "0.0.1",
   author: "Административный сервис",
   metadata: {
     title: {

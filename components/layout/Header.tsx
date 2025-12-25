@@ -6,8 +6,10 @@ import { useState, useEffect, useRef } from "react";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { getNotifications } from "@/lib/auth/api";
+import { AuthenticationError } from "@/lib/auth/errors";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { MobileSidebarTrigger } from "./MobileSidebar";
 
 interface Notification {
   id: string;
@@ -33,12 +35,34 @@ export default function Header() {
 
   // Загрузка уведомлений
   useEffect(() => {
-    if (isAuthenticated) {
-      loadNotifications();
-      // Обновляем уведомления каждые 30 секунд
-      const interval = setInterval(loadNotifications, 30000);
-      return () => clearInterval(interval);
-    }
+    if (!isAuthenticated) return;
+
+    // Загружаем уведомления сразу при монтировании
+    loadNotifications();
+
+    // Обновляем уведомления только когда вкладка активна
+    // Используем Page Visibility API для оптимизации
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Загружаем уведомления при возвращении на вкладку
+        loadNotifications();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Обновляем уведомления каждые 5 минут (вместо 30 секунд)
+    // Только если вкладка видима
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadNotifications();
+      }
+    }, 5 * 60 * 1000); // 5 минут
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isAuthenticated]);
 
   const loadNotifications = async () => {
@@ -47,7 +71,15 @@ export default function Header() {
       setNotifications(data);
       setUnreadCount(data.filter((n) => !n.read).length);
     } catch (error) {
-      console.error("Failed to load notifications:", error);
+      // Если это ошибка аутентификации, она будет обработана в useAuth
+      // Здесь просто не логируем, чтобы не засорять консоль
+      if (error instanceof AuthenticationError) {
+        // Ошибка аутентификации - useAuth обработает перенаправление
+        return;
+      }
+      if (error instanceof Error && !error.message.includes("Сессия истекла") && !error.message.includes("401")) {
+        console.debug("Failed to load notifications:", error);
+      }
     }
   };
 
@@ -95,17 +127,22 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 bg-muted border-b border-gray-400 flex items-center justify-between px-6 relative">
-      {/* Логотип */}
-      <Link
-        href="/"
-        className="text-shadow-md font-bold text-gray-900 hover:opacity-80 transition-opacity"
-        aria-label="Главная страница"
-      >
-        {siteConfig.name.split(" ")[0]}{" "}
-        <span className="text-red-400">&</span>{" "}
-        {siteConfig.name.split(" ")[2]}
-      </Link>
+    <header className="h-12 bg-muted border-b border-gray-400 flex items-center justify-between px-4 md:px-6 relative">
+        <div className="flex items-center gap-3">
+          {/* Кнопка бургер-меню для мобильных */}
+          <MobileSidebarTrigger />
+          
+          {/* Логотип */}
+          <Link
+            href="/"
+            className="text-shadow-md font-bold text-gray-900 hover:opacity-80 transition-opacity"
+            aria-label="Главная страница"
+          >
+            {siteConfig.name.split(" ")[0]}{" "}
+            <span className="text-red-400">&</span>{" "}
+            {siteConfig.name.split(" ")[2]}
+          </Link>
+        </div>
 
       {/* Правая часть */}
       <div className="flex items-center space-x-4">
@@ -116,7 +153,7 @@ export default function Header() {
           role="search"
         >
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3"
             aria-hidden="true"
           />
           <input
@@ -142,7 +179,13 @@ export default function Header() {
         <div className="relative" ref={notificationsRef}>
           <button
             className="notifications-button p-2 rounded-full hover:bg-gray-100 transition-colors relative"
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              // Обновляем уведомления при открытии меню
+              if (!showNotifications) {
+                loadNotifications();
+              }
+              setShowNotifications(!showNotifications);
+            }}
             aria-label={`Уведомления${unreadCount > 0 ? `, ${unreadCount} непрочитанных` : ""}`}
             aria-expanded={showNotifications}
             aria-haspopup="true"

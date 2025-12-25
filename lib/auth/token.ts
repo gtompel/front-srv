@@ -91,6 +91,22 @@ export function isTokenExpired(token: string): boolean {
 }
 
 /**
+ * Проверяет, нужно ли обновить токен заранее (за 2 минуты до истечения)
+ * Возвращает true, если токен истечёт в течение следующих 2 минут
+ */
+export function shouldRefreshToken(token: string): boolean {
+  const payload = decodeJWT(token);
+  if (!payload || !payload.exp) return true;
+  
+  const now = Date.now();
+  const expiresAt = payload.exp * 1000;
+  const timeUntilExpiry = expiresAt - now;
+  
+  // Обновляем токен, если до истечения осталось меньше 2 минут (120000 мс)
+  return timeUntilExpiry < 120000;
+}
+
+/**
  * Извлекает пользователя из токена
  */
 export function getUserFromToken(token: string): User | null {

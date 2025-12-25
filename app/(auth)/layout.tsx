@@ -5,13 +5,15 @@
 
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useRequireAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { MainWrapper } from "@/components/layout/Main-Wrapper";
+import MainWrapper from "@/components/layout/Main-Wrapper";
 import Sidebar from "@/components/layout/Sidebar";
+import MobileSidebar, { MobileSidebarProvider } from "@/components/layout/MobileSidebar";
+import SkipLink from "@/components/layout/SkipLink";
 
 export default function AuthLayout({
   children,
@@ -20,12 +22,25 @@ export default function AuthLayout({
 }) {
   const { isAuthenticated, isLoading } = useRequireAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/auth/login");
     }
   }, [isAuthenticated, isLoading, router]);
+
+  // Фокусируемся на основном контенте при навигации (для доступности)
+  useEffect(() => {
+    if (isAuthenticated && mainRef.current) {
+      // Небольшая задержка для завершения рендеринга
+      const timer = setTimeout(() => {
+        mainRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, isAuthenticated]);
 
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {
@@ -45,14 +60,32 @@ export default function AuthLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex min-w-0 flex-col">
-        <Header />
-        <MainWrapper>{children}</MainWrapper>
-        <Footer />
+    <MobileSidebarProvider>
+      {/* Skip Link для доступности */}
+      <SkipLink />
+      
+      {/* Мобильное бургер-меню */}
+      <MobileSidebar />
+      
+      <div className="flex min-h-screen">
+        {/* Десктопный сайдбар - скрыт на мобильных */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        <div className="flex-1 flex min-w-0 flex-col">
+          <Header />
+          <MainWrapper 
+            ref={mainRef}
+            aria-label="Основной контент приложения"
+            data-testid="main-content"
+            id="main-content"
+          >
+            {children}
+          </MainWrapper>
+          <Footer />
+        </div>
       </div>
-    </div>
+    </MobileSidebarProvider>
   );
 }
 

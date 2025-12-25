@@ -4,10 +4,11 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { AuthSession, User } from "@/lib/auth/types";
 import { getSession, logout as apiLogout } from "@/lib/auth/api";
+import { getAccessToken, isTokenExpired } from "@/lib/auth/token";
 
 export function useAuth() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -20,6 +21,18 @@ export function useAuth() {
     try {
       setIsLoading(true);
       const currentSession = await getSession();
+      
+      if (!currentSession) {
+        // Если сессии нет, очищаем состояние и перенаправляем на логин
+        setSession(null);
+        setIsAuthenticated(false);
+        // Перенаправляем только если мы не на странице логина/регистрации
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth/")) {
+          router.push("/auth/login");
+        }
+        return;
+      }
+      
       setSession(currentSession);
       setIsAuthenticated(!!currentSession);
     } catch (error) {
@@ -30,10 +43,17 @@ export function useAuth() {
       }
       setSession(null);
       setIsAuthenticated(false);
+      
+      // Перенаправляем на логин при ошибке аутентификации
+      if (error instanceof Error && (error.message.includes("401") || error.message.includes("Сессия истекла"))) {
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth/")) {
+          router.push("/auth/login");
+        }
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [router]);
 
   // Выход из системы
   const logout = useCallback(async () => {
