@@ -1,29 +1,56 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { siteConfig } from "@/config/site";
+import Button from "@/components/ui/Button";
 
 export default function HomePage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Редирект авторизованных пользователей на дашборд (первый защищённый маршрут)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/technologies");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Показываем загрузку пока проверяем авторизацию
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
+          <p className="mt-4 text-sm text-slate-600">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Не показываем лендинг если авторизован (редирект уже произошёл)
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
-    <section className="container mx-auto px-4 py-16">
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 container mx-auto px-4 py-16">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-4xl font-bold mb-4">
-          Административный сервис учёта проектов и технологий
+            {siteConfig.metadata.title.default}
         </h1>
         <p className="text-lg text-slate-700 mb-6">
-          Единый источник истины для руководства и команд: управление портфелем
-          проектов, каталог технологий, планирование и отчётность.
+            {siteConfig.metadata.description}
         </p>
 
         <div className="flex gap-3 justify-center mb-10">
-          <Link
-            href="/auth/login"
-            className="inline-block bg-sky-600 text-white px-5 py-2 rounded-md"
-          >
+            <Link href="/auth/login">
+              <Button variant="solid" size="lg">
             Войти
-          </Link>
-          <Link
-            href="/auth/login"
-            className="inline-block border border-slate-300 px-5 py-2 rounded-md"
-          >
-            Демо
+              </Button>
           </Link>
         </div>
 
@@ -39,6 +66,15 @@ export default function HomePage() {
           <li>Риски, ответственность и оперативные дайджесты</li>
         </ul>
       </div>
-    </section>
+      </main>
+      <footer className="w-full border-t bg-muted text-slate-700 px-6 py-3">
+        <div className="container mx-auto text-center text-xs">
+          <p>
+            © {new Date().getFullYear()} {siteConfig.author} • Версия{" "}
+            <span className="text-red-500 font-medium">{siteConfig.version}</span>
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 }

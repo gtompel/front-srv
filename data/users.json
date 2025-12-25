@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "email": "test@test.ru",
+    "password": "$2b$10$i0XivdePFyRtLZprB//O2u1opFsCrO/Z5j3uiRIotcfcyQ8qXQjPi",
+    "name": "Тестовый Пользователь",
+    "role": "admin",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "email": "pf@test.ru",
+    "password": "$2b$10$YGXutTSSmAl/rvhObWDUKOm0Pni/UeQbCRRuPPefHnJ8QIQoAZRjK",
+    "name": "Петр Федоров",
+    "role": "project_manager",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "3",
+    "email": "skb@test.ru",
+    "password": "$2b$10$YGXutTSSmAl/rvhObWDUKOm0Pni/UeQbCRRuPPefHnJ8QIQoAZRjK",
+    "name": "Сергей Козлов",
+    "role": "portfolio_manager",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "4",
+    "email": "gfhjkm@test.ru",
+    "password": "$2b$10$YGXutTSSmAl/rvhObWDUKOm0Pni/UeQbCRRuPPefHnJ8QIQoAZRjK",
+    "name": "Геннадий Иванов",
+    "role": "viewer",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]
+

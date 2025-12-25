@@ -1,96 +1,112 @@
 "use client";
 
-import Link from "next/link"; // Next.js-компонент для клиентской навигации
-import { usePathname } from "next/navigation"; // хук Next.js для получения текущего пути
-import {
-  BarChart3,
-  Code,
-  Calendar,
-  CheckSquare,
-  Building,
-  FileText,
-  Settings,
-  Skull,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react"; // иконки из lucide-react
-import { useEffect, useState } from "react"; // React хуки
-import { cn } from "@/lib/utils"; // утилита для условного объединения классов (classNames)
-import Button from "@/components/ui/Button"; // кастомная кнопка (компонент UI)
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
+import { navigation } from "@/config/navigation";
+import { siteConfig } from "@/config/site";
 
-/*
-  navigation — массив объектов, описывающих пункты меню:
-  name  - текст пункта,
-  href  - путь для Link,
-  icon  - компонент-иконка (lucide-react)
-*/
-const navigation = [
-  { name: "Панель управления", href: "/", icon: BarChart3 },
-  { name: "Технологии", href: "/technologies", icon: Code },
-  { name: "Проекты", href: "/projects", icon: Building },
-  { name: "Задачи", href: "/tasks", icon: CheckSquare },
-  { name: "Отчеты", href: "/reports", icon: FileText },
-  { name: "Риски", href: "/risks", icon: Skull },
-  { name: "События", href: "/events", icon: Calendar },
-  { name: "Настройки", href: "/settings", icon: Settings },
-];
+const STORAGE_KEY = "sidebar-collapsed";
+
+/**
+ * Безопасное чтение из localStorage с обработкой ошибок
+ */
+function getStoredCollapsedState(): boolean {
+  if (typeof window === "undefined") return false;
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored === "true";
+  } catch (error) {
+    console.warn("Failed to read sidebar state from localStorage:", error);
+    return false;
+  }
+}
+
+/**
+ * Безопасное сохранение в localStorage с обработкой ошибок
+ */
+function saveCollapsedState(collapsed: boolean): void {
+  if (typeof window === "undefined") return;
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, String(collapsed));
+  } catch (error) {
+    console.warn("Failed to save sidebar state to localStorage:", error);
+  }
+}
 
 export default function Sidebar() {
-  const pathname = usePathname(); // текущий путь, чтобы подсветить активный пункт
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // useState с ленивой инициализацией — читаем значение collapsed из localStorage только на клиенте.
-  // Это важно для Next.js и SSR: проверяем typeof window, чтобы не обращаться к localStorage на сервере.
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false; // на сервере оставляем раскрытым
-    return localStorage.getItem("sidebar-collapsed") === "true"; // читаем текущее состояние (true/false)
-  });
-
-  // useEffect сохраняет текущее состояние collapsed в localStorage при его изменении.
-  // Таким образом состояние сохраняется между перезагрузками страницы.
+  // Инициализация состояния после монтирования (избегаем hydration mismatch)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sidebar-collapsed", String(collapsed));
-    }
-  }, [collapsed]);
+    setIsMounted(true);
+    setCollapsed(getStoredCollapsedState());
+  }, []);
 
-  // Функция переключения состояния: сворачиваем/разворачиваем сайдбар
+  // Сохранение состояния в localStorage
+  useEffect(() => {
+    if (isMounted) {
+      saveCollapsedState(collapsed);
+    }
+  }, [collapsed, isMounted]);
+
   const toggleSidebar = () => {
     setCollapsed((prev) => !prev);
   };
 
+  // Предотвращаем hydration mismatch
+  if (!isMounted) {
+    return (
+      <aside className="bg-muted border-r min-h-screen w-64 flex flex-col">
+        <div className="flex items-center p-4">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    // aside — контейнер сайдбара
-    // cn объединяет базовые классы Tailwind с условными: ширина меняется в зависимости от collapsed
     <aside
       className={cn(
         "bg-muted border-r min-h-screen transition-all duration-200 flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}
+      aria-label="Боковая панель навигации"
     >
       <div
         className={cn(
-          "flex items-center p-4 justify-between",
-          collapsed && "justify-center" // при свернутом — центрируем контент хедера
+          "flex items-center p-4",
+          collapsed ? "justify-center" : "justify-between"
         )}
       >
-        {/* Заголовок и подзаголовок — показываем только когда сайдбар развернут */}
         {!collapsed && (
           <div>
-            {/* Заголовок сервиса */}
             <h1 className="text-xs text-shadow-md font-bold text-slate-700">
-              Проекты <span className="text-amber-300">&</span> Технологии
+              {siteConfig.name.split(" ")[0]}{" "}
+              <span className="text-amber-300">&</span>{" "}
+              {siteConfig.name.split(" ")[2]}
             </h1>
-            {/* Подпись */}
             <p className="text-xs text-shadow-md text-slate-400 mt-1">
-              Сервис учёта проектов
+              {siteConfig.description}
             </p>
           </div>
         )}
 
-        {/* Кнопка сворачивания/разворачивания */}
         <Button
-          className="rounded p-1 hover:bg-slate-700 transition-colors ml-auto"
-          aria-label={collapsed ? "Развернуть" : "Свернуть"}
+          className={cn(
+            "rounded p-1 hover:bg-red-300 transition-colors",
+            collapsed ? "" : "ml-auto"
+          )}
+          aria-label={collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"}
+          aria-expanded={!collapsed}
+          aria-controls="sidebar-navigation"
           onClick={toggleSidebar}
           size="xs"
         >
@@ -98,34 +114,43 @@ export default function Sidebar() {
         </Button>
       </div>
 
-      {/* Навигация: контейнер с отступами. При collapsed уменьшаем паддинг */}
-      <nav className={cn("px-3 space-y-3 flex-1", collapsed && "px-1")}>
+      <nav
+        id="sidebar-navigation"
+        className={cn("px-3 space-y-3 flex-1", collapsed && "px-1")}
+        aria-label="Основная навигация"
+      >
         {navigation.map((item) => {
           const isActive = pathname === item.href;
+          const Icon = item.icon;
+          
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
                 "group flex items-center w-full text-sm text-shadow-md transition-all duration-200 transform overflow-hidden rounded-md",
-                // фон по умолчанию — muted; текст — приглушённый
                 "bg-muted text-slate-700",
-                // hover — "выпуклость": лёгкий подъём + тень
                 "hover:bg-slate-300 hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0",
-                // padding в зависимости от collapsed
-                collapsed ? "px-0 py-3 flex-col h-12" : "px-3 py-2",
-                // активный пункт (если нужен синий) — оставляем возможность
-                isActive ? "bg-amber-300 text-slate-400 shadow-md" : ""
+                "focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2",
+                collapsed ? "px-0 py-3 flex-col h-12 justify-center" : "px-3 py-2",
+                isActive && "bg-amber-300 text-slate-900 shadow-md"
               )}
+              aria-current={isActive ? "page" : undefined}
+              title={collapsed ? item.name : undefined}
             >
-              <item.icon
+              <Icon
                 className={cn(
-                  "h-5 w-5",
+                  "h-5 w-5 flex-shrink-0",
                   collapsed ? "mx-auto" : "mr-3",
-                  isActive ? "text-gray-900" : "text-red-400"
+                  isActive ? "text-gray-900" : "text-red-300"
                 )}
+                aria-hidden="true"
               />
-              {!collapsed && <span className="truncate">{item.name}</span>}
+              {!collapsed && (
+                <span className="truncate" aria-hidden={collapsed}>
+                  {item.name}
+                </span>
+              )}
             </Link>
           );
         })}

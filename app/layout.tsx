@@ -1,15 +1,24 @@
 import "./globals.css";
 import type React from "react";
+import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { MainWrapper } from "@/components/layout/Main-Wrapper";
-import Sidebar from "@/components/layout/Sidebar";
+import { siteConfig } from "@/config/site";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "700"],
 });
+
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.metadata.title.default,
+    template: siteConfig.metadata.title.template,
+  },
+  description: siteConfig.metadata.description,
+  keywords: siteConfig.metadata.keywords,
+  authors: [{ name: siteConfig.author }],
+  creator: siteConfig.author,
+};
 
 export default function RootLayout({
   children,
@@ -18,16 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={jetbrainsMono.className}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex-1 flex flex-col" style={{ minWidth: 0 }}>
-            <Header>{/* меню/логотип */}</Header>
-            <MainWrapper>{children}</MainWrapper>
-            <Footer>{/* футер */}</Footer>
-          </div>
-        </div>
-      </body>
+      <body className={jetbrainsMono.className}>{children}</body>
     </html>
   );
 }
